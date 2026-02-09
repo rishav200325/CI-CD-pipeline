@@ -1,0 +1,18 @@
+pipeline {
+    agent any
+    stages {
+        stage('Clone Repository') { steps { checkout scm } }
+        stage('Install Dependencies') { steps { sh 'pip install -r requirements.txt' } }
+        stage('Run Tests') { steps { sh 'pytest' } }
+        stage('Build Docker Image') { steps { sh 'docker build -t flask-ci-cd-app .' } }
+        stage('Deploy Container') {
+            steps {
+                sh '''
+                docker stop flask_app || true
+                docker rm flask_app || true
+                docker run -d -p 5000:5000 --name flask_app flask-ci-cd-app
+                '''
+            }
+        }
+    }
+}
